@@ -1,0 +1,12 @@
+[project]
+name = "proyecto-eda-subastas"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "beautifulsoup4>=4.14.3",
+    "cloudscraper>=1.2.71",
+    "lxml>=6.0.3",
+    "pandas>=3.0.2",
+]
