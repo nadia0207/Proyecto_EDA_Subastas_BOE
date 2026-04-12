@@ -3,6 +3,12 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 
+# Paleta de colores del proyecto
+paleta = ['#2C3E50', "#E74C3C", '#3498DB', '#2ECC71', '#F39C12', '#9B59B6']
+color_principal = '#2C3E50'   # azul oscuro
+color_secundario = '#E74C3C'  # rojo
+color_acento = '#3498DB'      # azul claro
+
 
 def pinta_distribucion_categoricas(df, columnas_categoricas, relativa=False, mostrar_valores=False):
     num_columnas = len(columnas_categoricas)
@@ -171,14 +177,14 @@ def plot_combined_graphs(df, columns, whisker_width=1.5, bins = None):
         for i, column in enumerate(columns):
             if df[column].dtype in ['int64', 'float64']:
                 # Histograma y KDE
-                sns.histplot(df[column], kde=True ,ax=axes[i,0] if num_cols > 1 else axes[0], bins= "auto" if not bins else bins)
+                sns.histplot(df[column], kde=True, color= color_principal ,ax=axes[i,0] if num_cols > 1 else axes[0], bins= "auto" if not bins else bins)
                 if num_cols > 1:
                     axes[i,0].set_title(f'Histograma y KDE de {column}')
                 else:
                     axes[0].set_title(f'Histograma y KDE de {column}')
 
                 # Boxplot
-                sns.boxplot(x=df[column] ,ax=axes[i,1] if num_cols > 1 else axes[1], whis=whisker_width)
+                sns.boxplot(x=df[column], color= color_principal ,ax=axes[i,1] if num_cols > 1 else axes[1], whis=whisker_width)
                 if num_cols > 1:
                     axes[i,1].set_title(f'Boxplot de {column}')
                 else:

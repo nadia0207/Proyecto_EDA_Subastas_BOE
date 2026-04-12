@@ -42,7 +42,9 @@ def limpiar_dataframe(df):
         'referencia_det',           # idéntica a 'referencia'
         'num_lotes_listado',        # idéntica a 'lotes'
         'url_detalle',              # URL no aporta al análisis   
-        'anuncio_boe',              # código interno del BOE no aporta al análisis               
+        'anuncio_boe',              # código interno del BOE no aporta al análisis 
+        'cantidad_reclamada_eur',   # Esta columna solo aplica a subastas judiciales
+        'descripcion',              # Esta columna contiene descripcion, mucho texto y no aporta al análisis             
         'fecha_conclusion_listado', # duplicada en formato sucio '01/12/2025 a las 18:00:00' (texto con hora)
         'forma_adjudicacion',       #con 85% registros nulos que no aportan      
         'expediente',               #con 23% registros nulos que no aportan 
@@ -245,8 +247,8 @@ def plot_distribucion_valores(df):
         )
         media   = df[col].median()
         axes[i, 0].axvline(
-            media, color=color_secundario, linestyle='--',
-            linewidth=1.5, label=f'Mediana: {media:,.0f}€'
+            media, color=color_principal, linestyle='--',
+            linewidth=1.5, label=f'Mediana: {media:,.0f}€' #:,.0f da un formato
         )
         axes[i, 0].set_title(f'Distribución — {titulo} (escala log)')
         axes[i, 0].set_xlabel(titulo)
@@ -257,7 +259,7 @@ def plot_distribucion_valores(df):
         sns.boxplot(
             data=df, x=col,
             color=color,
-            flierprops=dict(marker='o', color=color_secundario,
+            flierprops=dict(marker='o', color=color_principal,
                             markersize=4, alpha=0.5),
             ax=axes[i, 1]
         )
@@ -321,6 +323,55 @@ def plot_tipo_subasta(df):
     plt.tight_layout()
     plt.show()
 
+#-------------------------------------------------------
+# -------------  ANÁLISIS BIVARIANTE  ------------------
+#-------------------------------------------------------
+
+def plot_descuento_por_tipo(df):
+    """
+    Boxplot y barplot del descuento_pct por tipo de subasta.
+    """
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+    # ===== Boxplot === 
+    sns.boxplot(
+        data=df, x='tipo_subasta', y='descuento_pct',
+        palette=[color_principal, color_acento], 
+        hue= 'tipo_subasta', legend= False,
+        ax=axes[0]
+    )
+    axes[0].axhline(50, color=color_secundario, linestyle='--',
+                    linewidth=1.5, label='Umbral 50%')
+    axes[0].set_title('Descuento por tipo de subasta')
+    axes[0].set_xlabel('')
+    axes[0].set_ylabel('Descuento (%)')
+    axes[0].legend()  # Leyenda manual para el 'Umbral 50%'
+
+    # ==== Barplot media === 
+    media = df.groupby('tipo_subasta')['descuento_pct'].mean().reset_index()
+    bars = axes[1].bar(
+        media['tipo_subasta'], media['descuento_pct'],
+        color=[color_principal, color_acento]
+    )
+    axes[1].axhline(50, color= color_secundario, linestyle='--',
+                    linewidth=1.5, label='Umbral 50%')
+    for bar, val in zip(bars, media['descuento_pct']):
+        axes[1].text(
+            bar.get_x() + bar.get_width()/2,
+            bar.get_height() + 0.5,
+            f'{val:.1f}%', ha='center', va='bottom', fontsize=12
+        )
+    axes[1].set_title('Descuento medio por tipo de subasta')
+    axes[1].set_xlabel('')
+    axes[1].set_ylabel('Descuento medio (%)')
+    axes[1].legend()
+
+    plt.suptitle(
+        'Análisis bivariante — Descuento por tipo de subasta',
+        fontsize=15, fontweight='bold', y=1.02
+    )
+    plt.tight_layout()
+    plt.show()
 
 def plot_valor_vs_tasacion(df):
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -346,7 +397,7 @@ def plot_valor_vs_tasacion(df):
         linewidth=1.5, label='Valor = Tasación'
     )
 
-    # ← escala logarítmica en ambos ejes
+    # Escala logarítmica en ambos ejes
     ax.set_xscale('log')
     ax.set_yscale('log')
 
@@ -357,3 +408,108 @@ def plot_valor_vs_tasacion(df):
     plt.tight_layout()
     plt.show()
 
+def plot_evolucion_mensual(df):
+    """
+    Evolución de subastas y descuento medio por mes.
+    """
+    df = df.copy()
+    df['mes'] = df['fecha_conclusion'].dt.to_period('M').astype(str)
+
+    resumen = df.groupby('mes').agg(
+        num_subastas    = ('referencia', 'count'),
+        descuento_medio = ('descuento_pct', 'mean')
+    ).reset_index()
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+    # Nº subastas por mes
+    bars1 = axes[0].bar(
+        resumen['mes'], resumen['num_subastas'],
+        color= color_principal
+    )
+    for bar in bars1:
+        axes[0].text(
+            bar.get_x() + bar.get_width()/2,
+            bar.get_height() + 1,
+            str(int(bar.get_height())),
+            ha='center', va='bottom', fontsize=12
+        )
+    axes[0].set_title('Número de subastas por mes')
+    axes[0].set_xlabel('Mes')
+    axes[0].set_ylabel('Nº subastas')
+
+    # Descuento medio por mes
+    bars2 = axes[1].bar(
+        resumen['mes'], resumen['descuento_medio'],
+        color= color_acento
+    )
+    axes[1].axhline(
+        50, color= color_secundario, linestyle='--',
+        linewidth=1.5, label='Umbral 50%'
+    )
+    for bar in bars2:
+        axes[1].text(
+            bar.get_x() + bar.get_width()/2,
+            bar.get_height() + 0.3,
+            f'{bar.get_height():.1f}%',
+            ha='center', va='bottom', fontsize=12
+        )
+    axes[1].set_title('Descuento medio por mes (%)')
+    axes[1].set_xlabel('Mes')
+    axes[1].set_ylabel('Descuento medio (%)')
+    axes[1].legend()
+
+    plt.suptitle(
+        'Evolución temporal — Oct/Nov/Dic 2025',
+        fontsize=15, fontweight='bold', y=1.02
+    )
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_contraste_hipotesis(df):
+    """
+    Gráfico específico para contrastar la hipótesis del 50%.
+    Muestra qué porcentaje de subastas está por encima y por debajo.
+    """
+    df = df.copy()
+    df['grupo'] = df['descuento_pct'].apply(
+        lambda x: 'Por debajo del 50%' if x < 50 else 'Por encima del 50%'
+    )
+
+    conteo = df['grupo'].value_counts()
+    pct    = df['grupo'].value_counts(normalize=True) * 100
+
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+    # Barplot
+    colores = [color_principal, color_secundario]
+    sns.barplot(
+        x=conteo.index, y=conteo.values,
+        palette=colores, ax=axes[0]
+    )
+    for i, (p, porcentaje) in enumerate(zip(axes[0].patches, pct.values)):
+        axes[0].annotate(
+            f'{int(p.get_height())} subastas\n({porcentaje:.1f}%)',
+            (p.get_x() + p.get_width()/2, p.get_height()),
+            ha='center', va='bottom', fontsize=12, fontweight='bold'
+        )
+    axes[0].set_title('¿Por encima o debajo del 50% de descuento?')
+    axes[0].set_xlabel('')
+    axes[0].set_ylabel('Nº subastas')
+
+    # Pie chart
+    axes[1].pie(
+        conteo.values,
+        labels=conteo.index,
+        colors=colores,
+        autopct='%1.1f%%',
+        startangle=90,
+        textprops={'fontsize': 12}
+    )
+    axes[1].set_title('Proporción respecto al umbral del 50%')
+
+    plt.suptitle('Contraste de hipótesis — Umbral 50% de descuento',
+                fontsize=15, fontweight='bold', y=1.02)
+    plt.tight_layout()
+    plt.show()
