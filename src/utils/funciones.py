@@ -31,7 +31,6 @@ def limpiar_dataframe(df):
     - Elimina columnas duplicadas
     - Elimina columnas que no aportan
     - Convierte fechas a datetime
-    - Calcula descuento_pct y duracion_dias
     Devuelve el DataFrame limpio.
     """
     df = df.copy()
@@ -56,13 +55,14 @@ def limpiar_dataframe(df):
     df['fecha_inicio']= pd.to_datetime(df['fecha_inicio'], errors= 'coerce') #coerce --> si no puede convertir un valor a fecha pone NaT
     df['fecha_conclusion']= pd.to_datetime(df['fecha_conclusion'], errors= 'coerce')
   
-    return df.reset_index(drop=True)
+    return [df.reset_index(drop=True),cols_eliminar]
 
 def calcular_pct(df):
     """
-    Calcula y añade nuevas columnas:
-    - Calcula descuento_pct y duracion_dias
-    Devuelve el DataFrame con las nuevas columnas.
+    Calcula y añade nueva columna descuento_pct
+    Devuelve:
+     - el DataFrame con las nuevas columnas
+     - maskara (tasacion_eur & valor_subasta_eur & tasacion_eur) > 0
     """
     #============= Calcular descuento_pct ==============
     # Mascara para obtener registros que tengan los 3 campos datos mayores a 0 
@@ -78,11 +78,18 @@ def calcular_pct(df):
         / df.loc[mask, 'tasacion_eur'] * 100
     ).round(2)
 
-    return df.reset_index(drop = True)
+    return [df.reset_index(drop = True), mask]
 
 def calcular_duracion_dias(df):
+    """
+    Calcula y añade nueva columna duracion_dias
+    Devuelve:
+     - el DataFrame con las nuevas columnas
+     - maskara (tasacion_eur & valor_subasta_eur & tasacion_eur) > 0
+    """
     # ============ Calcular duración en días ===========
     mask_fechas = df['fecha_inicio'].notna() & df['fecha_conclusion'].notna()
+    
     df.loc[mask_fechas, 'duracion_dias'] = (
         df.loc[mask_fechas, 'fecha_conclusion'] -
         df.loc[mask_fechas, 'fecha_inicio']
@@ -108,15 +115,15 @@ def filtrar_tributarios(df):
 
 # --------------------- ANÁLISIS--------------------------
 def resumen_dataset(df):
-    """Imprime un resumen rápido del dataset."""
-    print('=' * 45)
-    print('  RESUMEN DEL DATASET')
-    print('=' * 45)
-    print(f'  Filas          : {df.shape[0]:,}')
-    print(f'  Columnas       : {df.shape[1]}')
-    print(f'\n  Tipos de subasta:')
+    """Imprime un resumen del dataset"""
+    print('===== RESUMEN DEL DATASET =====')
+    print(f'Filas   : {df.shape[0]:,}')
+    print(f'Columnas: {df.shape[1]}')
+    print(f'\n Tipos de subasta:')
     print(df['tipo_subasta'].value_counts().to_string())
+
+
     if 'descuento_pct' in df.columns:
         print(f'\n  Descuento sobre tasación (%):')
-        print(df['descuento_pct'].describe().round(2).to_string())
-    print('=' * 45)
+        print(df['descuento_pct'].describe().round(2))
+    print('---------------------------' )
