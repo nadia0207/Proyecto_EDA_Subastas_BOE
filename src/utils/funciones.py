@@ -31,51 +31,64 @@ def limpiar_dataframe(df):
     - Elimina columnas duplicadas
     - Elimina columnas que no aportan
     - Convierte fechas a datetime
-    - Convierte lotes a int
     - Calcula descuento_pct y duracion_dias
     Devuelve el DataFrame limpio.
     """
     df = df.copy()
 
-    # Eliminar columnas duplicadas e innecesarias
+    # Indicando columnas duplicadas e innecesarias
     cols_eliminar = [
-        'id_sub', 'referencia_det', 'num_lotes_listado',  # duplicadas
-        'url_detalle', 'anuncio_boe',                      # no aportan
-        'fecha_conclusion_listado',                        # formato sucio
-        'forma_adjudicacion', 'expediente', 'cuenta_expediente',  # muchos nulos
+        'id_sub',                   # idéntica a 'referencia' 
+        'referencia_det',           # idéntica a 'referencia'
+        'num_lotes_listado',        # idéntica a 'lotes'
+        'url_detalle',              # URL no aporta al análisis   
+        'anuncio_boe',              # código interno del BOE no aporta al análisis               
+        'fecha_conclusion_listado', # duplicada en formato sucio '01/12/2025 a las 18:00:00' (texto con hora)
+        'forma_adjudicacion',       #con 85% registros nulos que no aportan      
+        'expediente',               #con 23% registros nulos que no aportan 
+        'cuenta_expediente',  #     #con 23% registros nulos que no aportan 
     ]
-    # Solo eliminar las que existan en el df
+    #====== Solo eliminar las que existan en el df =======
     cols_eliminar = [c for c in cols_eliminar if c in df.columns]
     df = df.drop(columns=cols_eliminar)
 
-    # Convertir fechas
-    for col in ['fecha_inicio', 'fecha_conclusion']:
-        if col in df.columns:
-            df[col] = pd.to_datetime(df[col], errors='coerce')
+    #==== Fechas a tipo datetime=======
+    df['fecha_inicio']= pd.to_datetime(df['fecha_inicio'], errors= 'coerce') #coerce --> si no puede convertir un valor a fecha pone NaT
+    df['fecha_conclusion']= pd.to_datetime(df['fecha_conclusion'], errors= 'coerce')
+  
+    return df.reset_index(drop=True)
 
-    # Lotes a int
-    if 'lotes' in df.columns:
-        df['lotes'] = df['lotes'].fillna(1).astype(int)
-
-    # Calcular descuento_pct
+def calcular_pct(df):
+    """
+    Calcula y añade nuevas columnas:
+    - Calcula descuento_pct y duracion_dias
+    Devuelve el DataFrame con las nuevas columnas.
+    """
+    #============= Calcular descuento_pct ==============
+    # Mascara para obtener registros que tengan los 3 campos datos mayores a 0 
     mask = (
         df['tasacion_eur'].notna() &
         df['valor_subasta_eur'].notna() &
         (df['tasacion_eur'] > 0)
     )
+
+    # Crea la columna descuento_pct con los datos calculados
     df.loc[mask, 'descuento_pct'] = (
         (df.loc[mask, 'tasacion_eur'] - df.loc[mask, 'valor_subasta_eur'])
         / df.loc[mask, 'tasacion_eur'] * 100
     ).round(2)
 
-    # Calcular duración en días
+    return df.reset_index(drop = True)
+
+def calcular_duracion_dias(df):
+    # ============ Calcular duración en días ===========
     mask_fechas = df['fecha_inicio'].notna() & df['fecha_conclusion'].notna()
     df.loc[mask_fechas, 'duracion_dias'] = (
         df.loc[mask_fechas, 'fecha_conclusion'] -
         df.loc[mask_fechas, 'fecha_inicio']
     ).dt.days
 
-    return df.reset_index(drop=True)
+    return df.reset_index(drop = True)
 
 def filtrar_tributarios(df):
     """
