@@ -6,8 +6,9 @@ Funciones auxiliares para el EDA de Subastas BOE
 import pandas as pd
 import numpy as np
 import re
-
-# -------------LIMPIEZA -------------------------------
+#-----------------------------------------------------
+# -------------       LIMPIEZA     -------------------
+#-----------------------------------------------------
 def limpiar_importe(texto):
     """
     Convierte texto de importe español a float.
@@ -113,7 +114,10 @@ def filtrar_tributarios(df):
 
     return df_filtrado.reset_index(drop=True)
 
-# --------------------- ANÁLISIS--------------------------
+#-------------------------------------------------------
+# -------------  RESUMEN DATASET  -------------------
+#-------------------------------------------------------
+
 def resumen_dataset(df):
     """Imprime un resumen del dataset"""
     print('===== RESUMEN DEL DATASET =====')
@@ -127,3 +131,229 @@ def resumen_dataset(df):
         print(f'\n  Descuento sobre tasación (%):')
         print(df['descuento_pct'].describe().round(2))
     print('---------------------------' )
+
+#-------------------------------------------------------
+# -------------  TEMA VISUAL GLOBAL  -------------------
+#-------------------------------------------------------
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Paleta de colores del proyecto
+paleta = ['#2C3E50', "#E74C3C", '#3498DB', '#2ECC71', '#F39C12', '#9B59B6']
+color_principal = '#2C3E50'   # azul oscuro
+color_secundario = '#E74C3C'  # rojo
+color_acento = '#3498DB'      # azul claro
+
+def set_tema():
+    """
+    Aplica el tema visual global a todos los gráficos.
+    Llamar una vez al inicio del notebook.
+    """
+    sns.set_theme(style='whitegrid')
+    plt.rcParams.update({
+        'figure.figsize'     : (12, 5),
+        'figure.dpi'         : 120,
+        'axes.titlesize'     : 14,
+        'axes.titleweight'   : 'bold',
+        'axes.labelsize'     : 12,
+        'xtick.labelsize'    : 10,
+        'ytick.labelsize'    : 10,
+        'axes.spines.top'    : False,
+        'axes.spines.right'  : False,
+        'figure.facecolor'   : 'white',
+        'axes.facecolor'     : '#F8F9FA',
+    })
+    print(' ==== Tema visual aplicado ====')
+
+
+#-------------------------------------------------------
+# -------------  ANÁLISIS UNIVARIANTE ------------------
+#-------------------------------------------------------
+def plot_distribucion_descuento(df):
+    """
+    Histograma + KDE y Boxplot del descuento_pct.
+    Muestra líneas de referencia en 25%, 50% y 75%.
+    """
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+    # === Histograma con KDE === 
+    sns.histplot(
+        data=df, x='descuento_pct',
+        bins=30, kde=True,
+        color=color_principal,
+        ax=axes[0]
+    )
+    # Líneas de referencia
+    for val, label, color in [
+        (25,  '25%',                      color_acento),
+        (50,  '50% — umbral hipótesis',   color_secundario),
+        (75,  '75%',                      '#2ECC71'),
+    ]:
+        axes[0].axvline(
+            val, color=color, linestyle='--',
+            linewidth=1.5, label=label
+        )
+    mediana = df['descuento_pct'].median()
+    axes[0].axvline(
+        mediana, color='black', linestyle='-',
+        linewidth=2, label=f'Mediana: {mediana:.1f}%'
+    )
+    axes[0].set_title('Distribución del descuento sobre tasación')
+    axes[0].set_xlabel('Descuento (%)')
+    axes[0].set_ylabel('Frecuencia')
+    axes[0].legend(fontsize=9)
+
+    # === Boxplot ===
+    sns.boxplot(
+        data = df, x='descuento_pct',
+        color = color_principal,
+        flierprops=dict(marker='o', color = color_secundario,
+                        markersize=5, alpha=0.6),
+        ax=axes[1]
+    )
+    axes[1].axvline(
+        50, color = color_secundario, linestyle='--',
+        linewidth=1.5, label='Umbral 50%'
+    )
+    axes[1].set_title('Boxplot del descuento sobre tasación')
+    axes[1].set_xlabel('Descuento (%)')
+    axes[1].legend(fontsize=9)
+
+    plt.suptitle(
+        'Análisis univariante — Descuento sobre tasación (%)',
+        fontsize=15, fontweight='bold', y=1.02
+    )
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_distribucion_valores(df):
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+
+    for i, (col, titulo, color) in enumerate([
+        ('valor_subasta_eur', 'Valor de subasta (€)', color_acento),
+        ('tasacion_eur',      'Tasación (€)',          color_principal),
+    ]):
+        # Histograma con escala logarítmica
+        sns.histplot(
+            data=df, x=col,
+            bins=30, kde=True,
+            color=color,
+            log_scale=True,      # ← escala logarítmica
+            ax=axes[i, 0]
+        )
+        media   = df[col].median()
+        axes[i, 0].axvline(
+            media, color=color_secundario, linestyle='--',
+            linewidth=1.5, label=f'Mediana: {media:,.0f}€'
+        )
+        axes[i, 0].set_title(f'Distribución — {titulo} (escala log)')
+        axes[i, 0].set_xlabel(titulo)
+        axes[i, 0].set_ylabel('Frecuencia')
+        axes[i, 0].legend(fontsize=9)
+
+        # Boxplot con escala logarítmica
+        sns.boxplot(
+            data=df, x=col,
+            color=color,
+            flierprops=dict(marker='o', color=color_secundario,
+                            markersize=4, alpha=0.5),
+            ax=axes[i, 1]
+        )
+        axes[i, 1].set_xscale('log')   # ← escala logarítmica
+        axes[i, 1].set_title(f'Boxplot — {titulo} (escala log)')
+        axes[i, 1].set_xlabel(titulo)
+
+    plt.suptitle(
+        'Análisis univariante — Valores económicos (escala logarítmica)',
+        fontsize=15, fontweight='bold', y=1.02
+    )
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_tipo_subasta(df):
+    """
+    Barplot horizontal de subastas por tipo con porcentaje.
+    """
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+    conteo = df['tipo_subasta'].value_counts()
+    colores = [color_principal, color_secundario]
+
+    # === Barplot horizontal ===
+    conteo_df = conteo.reset_index()
+    conteo_df.columns = ['tipo_subasta', 'cantidad']
+
+    bars = axes[0].barh(
+        conteo_df['tipo_subasta'],
+        conteo_df['cantidad'],
+        color=colores[:len(conteo)]
+    )
+    # Etiquetas
+    for bar, val in zip(bars, conteo.values):
+        axes[0].text(
+            val + 2, bar.get_y() + bar.get_height()/2,
+            f'{val} subastas ({val/len(df)*100:.1f}%)',
+            va='center', fontsize=11
+        )
+    axes[0].set_title('Número de subastas por tipo')
+    axes[0].set_xlabel('Número de subastas')
+    axes[0].set_xlim(0, conteo.max() * 1.35)
+    axes[0].invert_yaxis()
+
+    # === Pie chart ===
+    axes[1].pie(
+        conteo.values,
+        labels=conteo.index,
+        colors=colores[:len(conteo)],
+        autopct='%1.1f%%',
+        startangle=90,
+        textprops={'fontsize': 11}
+    )
+    axes[1].set_title('Proporción por tipo de organismo')
+
+    plt.suptitle(
+        'Análisis univariante — Tipo de subasta',
+        fontsize=15, fontweight='bold', y=1.02
+    )
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_valor_vs_tasacion(df):
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    colores_tipo = {
+        'AGENCIA TRIBUTARIA'    : color_principal,
+        'RECAUDACIÓN TRIBUTARIA': color_secundario
+    }
+
+    for tipo, grupo in df.groupby('tipo_subasta'):
+        ax.scatter(
+            grupo['tasacion_eur'],
+            grupo['valor_subasta_eur'],
+            color=colores_tipo.get(tipo, color_acento),
+            label=tipo, alpha=0.6, s=40
+        )
+
+    # Línea donde valor = tasacion
+    max_val = max(df['tasacion_eur'].max(), df['valor_subasta_eur'].max())
+    ax.plot(
+        [0, max_val], [0, max_val],
+        color='black', linestyle='--',
+        linewidth=1.5, label='Valor = Tasación'
+    )
+
+    # ← escala logarítmica en ambos ejes
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+
+    ax.set_title('Valor de subasta vs Tasación (escala logarítmica)')
+    ax.set_xlabel('Tasación (€) — escala log')
+    ax.set_ylabel('Valor de subasta (€) — escala log')
+    ax.legend()
+    plt.tight_layout()
+    plt.show()
+
