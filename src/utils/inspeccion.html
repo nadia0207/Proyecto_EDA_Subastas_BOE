@@ -6,6 +6,20 @@
     <title>Mi Página</title>
 </head>
 <body>
+
+<!--===========================================================--> 
+<!-- Desde aqui inspecciono campos del formulario de busqueda -->
+<!--===========================================================--> 
+
+<input type="radio" id="idTipoBienI" value="I" name="dato[3]" 
+onclick="javascript:document.getElementById('idSubtipoBienITodos').checked='checked'">
+<input type="radio" id="idSubtipoBienITodos" value name="dato[4]" checked="checked">
+<input type="date" name="dato[17][0]" id="desdeFP"   value placeholder="dd/mm/yyyy">
+<input type="date" name="dato[17][1]" id="hastaFP" value placeholder="dd/mm/yyyy">
+<input input type="date" name="dato[18][0]"  id="desdeIP" value placeholder="dd/mm/yyyy">
+<input type="date" name="dato[18][1]" id="hastaIP" value placeholder="dd/mm/yyyy">
+<input input type="submit" name="accion" value="Buscar" title="Buscar" class="boton">
+ 
  
 <!--===========================================================--> 
 <!-- Desde aqui inspecciono veo los resultados de la busqueda  -->
