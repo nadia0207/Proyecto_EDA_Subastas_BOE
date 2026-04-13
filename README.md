@@ -1,5 +1,8 @@
 # EDA — Subastas Públicas de Inmuebles en España
 
+![alt text](image-1.png)
+
+
 > **¿Una oportunidad real de compra?**  
 > Análisis exploratorio de datos sobre subastas públicas de inmuebles publicadas en el Portal del BOE (oct–dic 2025)
 
@@ -8,10 +11,6 @@
 ## Descripción
 
 Este proyecto analiza las subastas públicas de inmuebles publicadas en el **Portal de Subastas del Boletín Oficial del Estado** ([subastas.boe.es](https://subastas.boe.es)) durante el trimestre octubre–diciembre 2025.
-
-El objetivo es responder una pregunta concreta de negocio:
-
-> *"¿Los inmuebles subastados por organismos tributarios en España salen a precios significativamente inferiores a su valor de mercado?"*
 
 ---
 
