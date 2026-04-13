@@ -1,6 +1,6 @@
 # EDA — Subastas Públicas de Inmuebles en España
 
-![alt text](image-1.png)
+![alt text](./src/img/imagen_md.png)
 
 
 > **¿Una oportunidad real de compra?**  
@@ -73,11 +73,12 @@ Este proyecto analiza las subastas públicas de inmuebles publicadas en el **Por
 proyecto_eda_subastas/
 ├── src/
 │   ├── data/
-│   │   ├── subastas_inmuebles_oct2025.csv
-│   │   ├── subastas_inmuebles_nov2025.csv
+│   │   ├── subastas_analisis_final.csv
 │   │   ├── subastas_inmuebles_dic2025.csv
-│   │   └── subastas_analisis_final.csv
+│   │   ├── subastas_inmuebles_nov2025.csv
+│   │   └── subastas_inmuebles_oct2025.csv
 │   ├── img/
+│   │   └── imagen_md.png     ← imagen para README
 │   │   └── slide1.png        ← imagen1 para slide1 de PresentacionEDA.pptx
 │   │   └── slide2.png        ← imagen2 para slide2 de PresentacionEDA.pptx
 │   │   └── slide3.png        ← imagen3 para slide3 de PresentacionEDA.pptx
@@ -91,8 +92,8 @@ proyecto_eda_subastas/
 │   │   └── funciones.py             ← funciones propias de limpieza y visualización
 │   │   └── inspeccion.html          ← inspeccion del portal web BOE para Web Scraping
 │   └── memoria.ipynb                ← notebook principal del EDA
-├── PresentacionEDA.pptx             ← presentación de resultados
 ├── main.py
+├── PresentacionEDA.pptx             ← presentación de resultados
 ├── pyproject.toml
 ├── README.md
 └── uv.lock
