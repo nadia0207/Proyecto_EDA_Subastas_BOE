@@ -390,7 +390,7 @@ def plot_valor_vs_tasacion(df):
         )
 
     # Línea donde valor = tasacion
-    max_val = max(df['tasacion_eur'].max(), df['valor_subasta_eur'].max())
+    max_val = max(df['tasacion_eur'].max(), df['valor_subasta_eur'].max()) #valor maximo de las 2 columnas
     ax.plot(
         [0, max_val], [0, max_val],
         color='black', linestyle='--',
