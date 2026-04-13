@@ -484,16 +484,36 @@ def plot_contraste_hipotesis(df):
 
     # Barplot
     colores = [color_principal, color_secundario]
-    sns.barplot(
-        x=conteo.index, y=conteo.values,
-        palette=colores, ax=axes[0]
+    
+    
+
+    axes[0].bar(
+    conteo.index, conteo.values,
+    color=colores[:len(conteo)]
     )
+
     for i, (p, porcentaje) in enumerate(zip(axes[0].patches, pct.values)):
-        axes[0].annotate(
-            f'{int(p.get_height())} subastas\n({porcentaje:.1f}%)',
-            (p.get_x() + p.get_width()/2, p.get_height()),
-            ha='center', va='bottom', fontsize=12, fontweight='bold'
-        )
+        # Si la barra es muy alta, poner la etiqueta DENTRO
+        altura = p.get_height()
+        if altura > 200:
+            # etiqueta dentro de la barra
+            axes[0].annotate(
+                f'{int(altura)} subastas\n({porcentaje:.1f}%)',
+                (p.get_x() + p.get_width()/2, altura / 2),
+                ha='center', va='center',
+                fontsize=12, fontweight='bold',
+                color='white'   # texto blanco para que se lea dentro
+            )
+        else:
+            # etiqueta encima de la barra
+            axes[0].annotate(
+                f'{int(altura)} subastas\n({porcentaje:.1f}%)',
+                (p.get_x() + p.get_width()/2, altura + 5),
+                ha='center', va='bottom',
+                fontsize=12, fontweight='bold',
+                color='black'
+            )
+
     axes[0].set_title('¿Por encima o debajo del 50% de descuento?')
     axes[0].set_xlabel('')
     axes[0].set_ylabel('Nº subastas')
