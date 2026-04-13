@@ -88,8 +88,9 @@ proyecto_eda_subastas/
 │   ├── notebooks/
 │   │   └── Web_Scraping.ipynb       ← scraping paso a paso
 │   ├── utils/
-│   │   ├── funciones.py             ← funciones propias de limpieza y visualización
-│   │   └── bootcampviztools.py      ← funciones de visualización del bootcamp
+│   │   ├── bootcampviztools.py      ← funciones de visualización del bootcamp
+│   │   └── funciones.py             ← funciones propias de limpieza y visualización
+│   │   └── inspeccion.html          ← inspeccion del portal web BOE para Web Scraping
 │   └── memoria.ipynb                ← notebook principal del EDA
 ├── PresentacionEDA.pptx             ← presentación de resultados
 ├── main.py
